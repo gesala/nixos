@@ -1,0 +1,121 @@
+<-- Actualizar Canal-->
+#ver canal suscrito
+nix-channel --list | grep nixos
+#Cambiar de canal
+nix-channel --add https://channels.nixos.org/nixos-23.11 nixos --> version 23.11
+nix-channel --add https://channels.nixos.org/nixos-unstable nixos --> version unstable
+#Actualizar
+nixos-rebuild switch --upgrade
+
+
+
+
+
+
+
+<-- Actualizar -->
+
+
+    Are you on the latest channel?
+    (See how to check and set below.)
+
+    sudo nix-channel --update
+
+    a. (declarative/NixOS) sudo nixos-rebuild switch
+    b.                   (ad-hoc) nix-env -u '*'
+    c.     (Home Manager) home-manager switch (I think)
+
+These steps should work regardless of using NixOS or not.
+
+NOTE-1 (flakes): It's a fairly good bet that none of this will work if you are using flakes.
+
+NOTE-2 (NixOS + Home Manager): If nixos-rebuild switch fails with cryptic error messages, look at your Home Manager config. At least, in the past 5 years, whenever the error wasn't clear (e.g., nix.maxJobs deprecated in favor of nix.settings.max-jobs), it was always something about Home Manager.
+Step 0. Check and set the latest channel
+
+Step 1.'s nix-channel --update will only pull the changes in the channel that is currently set! To check the current one you are subscribed to, issue
+
+sudo nix-channel --list
+
+The latest NixOS manual's Chapter 4. Upgrading NixOS will always show the name and the link of the latest channel. The Nix Channel Status page is also a very good resource.
+
+For example, I was subscribed to channel 20.09 so I needed to update it to 21.11 by doing
+
+$ sudo nix-channel --list
+nixos https://nixos.org/channels/nixos-20.09
+
+$ sudo nix-channel --remove nixos
+$ sudo nix-channel --add https://nixos.org/channels/nixos-21.11 nixos
+
+More info:
+
+    The Nix manual's 4.4 Channels section is a short intro to Nix channels.
+
+    The NixOS wiki's Nix channels article goes more into the details and has a good summary on the basic commands. (Personally, I found this one more useful.)
+
+Step 1. Update the channel
+
+This is required both for declarative and "ad-hoc" [sic] setups3:
+
+sudo nix-channel --update
+
+Even though the Nix manual has a 4.1 Basic Package Management section, it is best documented in the NixOS manual (see Chapter 7. Package Management). (Albeit, I didn't find it straightforward figuring out the correct order of steps from these; the biggest help was this NixOS discourse thread.)
+
+Home Manager does not seem to complicate this process. (At least, I'm using it on NixOS, and nixos-rebuild switch always takes care of everything with my setup.)
+
+    TIP FOR NIXOS USERS
+    The nixos-rebuild switch --upgrade combines Step 1. and Step 2. as it "is equivalent to the more verbose nix-channel --update nixos; nixos-rebuild switch".
+
+Step 2. Update the packages
+
+The two adjectives, "ad-hoc" [sic] and "declarative", are introduced in the NixOS manual to differentiate the two modes of Nix package management3:
+
+    "ad-hoc": Managing packages with nix-env.1
+
+    "declarative": In the NixOS manual, this refers to declaring packages as a list in NixOS' configuration.nix, but it can be done in many other ways2.
+
+The commands:
+
+a. To update all packages declared in NixOS' configuration.nix, use:
+
+sudo nixos-rebuild switch
+
+b. To update all packages installed with nix-env:
+
+nix-env -u '*'
+
+c. To update all packages installed using Home Manager:
+
+home-manager switch
+
+(I think. Again, I'm using Home Manager in NixOS, and never had to touch any Home Manager commands. See Home-manager equivalent of “apt upgrade”)
+Footnotes
+
+[1]: As far as I know, the NixOS manual is the only official document that uses the term "ad-hoc [sic] package management" and only to mean package management using nix-env.
+
+(Therefore I find the term misleading, because using packages via nix-shell -p commands or custom shell.nix-es are also ad hoc forms of package management. Also, nix-env can be messy.)
+
+[2]: For example with Home Manager, using shell.nix-es, flakes. (It is probably incorrect to list flakes, as it is a mechanism that can be used with Home Manager and nix-shell Nix expressions...)
+
+[3]: Not sure if there is a consensus what "ad-hoc", "declarative", and "imperative" package management means in Nix; footnote 1 has my thoughts about "ad-hoc", some say that using channels is always an imperative form of package management, so "declarative" seems to be overloaded...
+
+
+
+
+
+
+
+
+
+<-- Borrar Old generations --> 
+sudo nix-env --list-generations ; sudo nix-env --delete-generations 10 11 12 13
+
+
+<-- Borrar Old generations 2 -->
+sudo nix-collect-garbage --delete-old
+sudo nix-collect-garbage --delete-generations 1 2 3
+
+# recommeneded to sometimes run as sudo to collect additional garbage
+sudo nix-collect-garbage -d
+
+# As a separation of concerns - you will need to run this command to clean out boot
+sudo /run/current-system/bin/switch-to-configuration boot
